@@ -10,13 +10,12 @@ const port = process.env.PORT || 5000;
 //assignment-6-backend-relief-goods.vercel.app
 // https://relief-fund-management.netlify.app/
 
-// Middleware
-// https: app.use(
-//   cors({
-//     origin: "https://relief-fund-management.netlify.app",
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(express.json());
 // Enable CORS for all requests
 // app.use((req, res, next) => {
@@ -93,17 +92,50 @@ async function run() {
         token,
       });
     });
-
     app.get("/products/dishwashing-items", async (req, res) => {
-      const query = {};
-      const result = await categoriesCollection.find(query);
-      const supplies = await result.toArray();
-      res.status(200).json({
-        success: true,
-        message: "All Product Categories Fetched Successfully!",
-        data: supplies,
-      });
+      const { category } = req.query;
+      const query = category ? { category: category } : {}; // Ensure the query object correctly references the name field
+
+      try {
+        const result = await categoriesCollection.find(query);
+        const supplies = await result.toArray();
+        res.status(200).json({
+          success: true,
+          message: "Product Categories Fetched Successfully!",
+          data: supplies,
+        });
+      } catch (error) {
+        res.status(500).json({
+          success: false,
+          message: "An error occurred while fetching the product categories.",
+          error: error.message,
+        });
+      }
     });
+
+    //  app.get("/products/dishwashing-items", async (req, res) => {
+    //    try {
+    //      const category = req.query.category;
+    //      let query = {};
+
+    //      if (category) {
+    //        query = { name: category }; // Adjust based on your schema
+    //      }
+
+    //      const result = await categoriesCollection.find(query).toArray();
+    //      res.status(200).json({
+    //        success: true,
+    //        message: "Products Fetched Successfully!",
+    //        data: result,
+    //      });
+    //    } catch (err) {
+    //      console.error("Error fetching products:", err);
+    //      res.status(500).json({
+    //        success: false,
+    //        message: "Internal Server Error",
+    //      });
+    //    }
+    //  });
     //  flash-sale api here
     app.get("/flash-sale", async (req, res) => {
       const query = {};
