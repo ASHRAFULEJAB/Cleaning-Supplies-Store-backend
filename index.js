@@ -39,6 +39,7 @@ async function run() {
     const db = client.db("cleaningStorebackend-assignment8");
     const categoriesCollection = db.collection("categories");
     const flashSaleCollection = db.collection("flashSale");
+    const trendingProductsCollection = db.collection("trending-products");
 
     // User Registration
     app.post("/api/v1/register", async (req, res) => {
@@ -98,11 +99,11 @@ async function run() {
 
       try {
         const result = await categoriesCollection.find(query);
-        const supplies = await result.toArray();
+        const dishproducts = await result.toArray();
         res.status(200).json({
           success: true,
           message: "Product Categories Fetched Successfully!",
-          data: supplies,
+          data: dishproducts,
         });
       } catch (error) {
         res.status(500).json({
@@ -140,36 +141,52 @@ async function run() {
     app.get("/flash-sale", async (req, res) => {
       const query = {};
       const result = await flashSaleCollection.find(query);
-      const reliefs = await result.toArray();
+      const flashSale = await result.toArray();
       res.status(200).json({
         success: true,
         message: "Flash Sales Fetched Successfully!",
-        data: reliefs,
+        data: flashSale,
       });
     });
-
-    app.get("/products/dishwashing-items/:id", async (req, res) => {
+    // trending products
+    app.get("/trending-products", async (req, res) => {
+      const query = {};
+      const result = await trendingProductsCollection.find(query);
+      const trendings = await result.toArray();
+      res.status(200).json({
+        success: true,
+        message: "Trending Products Fetched Successfully!",
+        data: trendings,
+      });
+    });
+    app.get("/products/dishwashing-items/:_id", async (req, res) => {
       try {
-        const id = req.params.id;
-        if (!ObjectId.isValid(id)) {
-          return res
-            .status(400)
-            .json({ success: false, message: "Invalid ID" });
-        }
+        const _id = req.params._id;
 
+        // Find the document that contains the product with the given custom ID
         const result = await categoriesCollection.findOne({
-          _id: new ObjectId(id),
+          "products._id": _id,
         });
 
         if (!result) {
           return res
             .status(404)
-            .json({ success: false, message: "Relief not found" });
+            .json({ success: false, message: "Product not found" });
         }
+
+        // Find the specific product within the products array
+        const product = result.products.find((p) => p._id === _id);
+
+        if (!product) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Product not found" });
+        }
+
         res.status(200).json({
           success: true,
-          message: "Single Products Fetched Successfully!",
-          result,
+          message: "Product fetched successfully!",
+          product,
         });
       } catch (error) {
         console.error(error);
@@ -178,6 +195,37 @@ async function run() {
           .json({ success: false, message: "Internal Server Error" });
       }
     });
+
+    // app.get("/products/dishwashing-items/:id", async (req, res) => {
+    //   try {
+    //     const id = req.params.id;
+    //     if (!ObjectId.isValid(id)) {
+    //       return res
+    //         .status(400)
+    //         .json({ success: false, message: "Invalid ID" });
+    //     }
+
+    //     const result = await categoriesCollection.findOne({
+    //       _id: new ObjectId(id),
+    //     });
+
+    //     if (!result) {
+    //       return res
+    //         .status(404)
+    //         .json({ success: false, message: "Relief not found" });
+    //     }
+    //     res.status(200).json({
+    //       success: true,
+    //       message: "Single Products Fetched Successfully!",
+    //       result,
+    //     });
+    //   } catch (error) {
+    //     console.error(error);
+    //     res
+    //       .status(500)
+    //       .json({ success: false, message: "Internal Server Error" });
+    //   }
+    // });
 
     // Start the server
     app.listen(port, () => {
