@@ -7,8 +7,6 @@ const jwt = require("jsonwebtoken");
 
 const app = express();
 const port = process.env.PORT || 5000;
-//assignment-6-backend-relief-goods.vercel.app
-// https://relief-fund-management.netlify.app/
 
 app.use(
   cors({
@@ -17,11 +15,6 @@ app.use(
   })
 );
 app.use(express.json());
-// Enable CORS for all requests
-// app.use((req, res, next) => {
-//   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-//   next();
-// });
 
 // MongoDB Connection URL
 const uri = process.env.MONGODB_URI;
@@ -93,9 +86,22 @@ async function run() {
         token,
       });
     });
+
     app.get("/products/dishwashing-items", async (req, res) => {
-      const { category } = req.query;
-      const query = category ? { category: category } : {}; // Ensure the query object correctly references the name field
+      const { category, price, ratings } = req.query;
+
+      // Build query object
+      const query = {};
+      if (category) {
+        query.category = category;
+      }
+      if (price) {
+        query["price"] = { $eq: price };
+      }
+
+      if (ratings) {
+        query["ratings"] = { $eq: ratings };
+      }
 
       try {
         const result = await categoriesCollection.find(query);
@@ -114,29 +120,6 @@ async function run() {
       }
     });
 
-    //  app.get("/products/dishwashing-items", async (req, res) => {
-    //    try {
-    //      const category = req.query.category;
-    //      let query = {};
-
-    //      if (category) {
-    //        query = { name: category }; // Adjust based on your schema
-    //      }
-
-    //      const result = await categoriesCollection.find(query).toArray();
-    //      res.status(200).json({
-    //        success: true,
-    //        message: "Products Fetched Successfully!",
-    //        data: result,
-    //      });
-    //    } catch (err) {
-    //      console.error("Error fetching products:", err);
-    //      res.status(500).json({
-    //        success: false,
-    //        message: "Internal Server Error",
-    //      });
-    //    }
-    //  });
     //  flash-sale api here
     app.get("/flash-sale", async (req, res) => {
       const query = {};
@@ -195,37 +178,6 @@ async function run() {
           .json({ success: false, message: "Internal Server Error" });
       }
     });
-
-    // app.get("/products/dishwashing-items/:id", async (req, res) => {
-    //   try {
-    //     const id = req.params.id;
-    //     if (!ObjectId.isValid(id)) {
-    //       return res
-    //         .status(400)
-    //         .json({ success: false, message: "Invalid ID" });
-    //     }
-
-    //     const result = await categoriesCollection.findOne({
-    //       _id: new ObjectId(id),
-    //     });
-
-    //     if (!result) {
-    //       return res
-    //         .status(404)
-    //         .json({ success: false, message: "Relief not found" });
-    //     }
-    //     res.status(200).json({
-    //       success: true,
-    //       message: "Single Products Fetched Successfully!",
-    //       result,
-    //     });
-    //   } catch (error) {
-    //     console.error(error);
-    //     res
-    //       .status(500)
-    //       .json({ success: false, message: "Internal Server Error" });
-    //   }
-    // });
 
     // Start the server
     app.listen(port, () => {
