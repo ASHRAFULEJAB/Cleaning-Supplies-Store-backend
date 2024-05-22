@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "https://cleaning-supplies-store-frontend.vercel.app",
     credentials: true,
   })
 );
